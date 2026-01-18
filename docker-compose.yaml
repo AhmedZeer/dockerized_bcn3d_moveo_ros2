@@ -1,0 +1,36 @@
+version: '3.8'
+
+services:
+  ros2-sim:
+    build: .
+    container_name: ros2_humble_sim
+    # Matches '--network host' in your script
+    network_mode: host 
+    # Matches '--privileged' and volume mounts for devices
+    privileged: true 
+    environment:
+      # Matches '-e DISPLAY=${DISPLAY}'
+      - DISPLAY=${DISPLAY}
+      - QT_X11_NO_MITSHM=1
+      # Matches '-e NVIDIA_DRIVER_CAPABILITIES=all'
+      - NVIDIA_DRIVER_CAPABILITIES=all
+      - NVIDIA_VISIBLE_DEVICES=all
+      # Matches '-e ROS_DOMAIN_ID=42'
+      - ROS_DOMAIN_ID=42
+    volumes:
+      # Matches '--volume="/tmp/.X11-unix:/tmp/.X11-unix"'
+      - /tmp/.X11-unix:/tmp/.X11-unix:rw
+      # Matches '--volume="$WORKSPACE_DIR:..."'
+      # This maps your local src folder to the container so you can edit code on host
+      - ./humble_docker_volume:/root/ros2_ws/src
+      - /dev:/dev
+    deploy:
+      resources:
+        reservations:
+          devices:
+            # Matches '--gpus all' logic
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    stdin_open: true
+    tty: true
